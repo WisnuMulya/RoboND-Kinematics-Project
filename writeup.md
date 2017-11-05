@@ -30,6 +30,7 @@ I obtained the DH parameters table by sketching the diagram of KR210 and do an a
 ![KR210 Diagram Analysis][robot-diagram]
 
 Then deriving the DH parameters table:
+
 Links | alpha(i-1) | a(i-1) | d(i-1) | theta(i)
 --- | --- | --- | --- | ---
 0->1 | 0 | 0 | d1 | q1
@@ -97,7 +98,9 @@ T0_G = T0_1 * T1_2 * T2_3 * T3_4 * T4_5 * T5_6 * T6_G
 ##### Inverse Position
 
 First, I need to obtain the position of the wrist center. Given only gripper position and its pose, I could obtain the equation of the wrist center as the following:
+
 ![Arbitrary Homogeneous Transform][t0_g]
+
 ![Wrist Center Equation][wc-eq]
 
 The value of **n** can be obtained by calculating the matrix homogeneous matrix by the following code:
