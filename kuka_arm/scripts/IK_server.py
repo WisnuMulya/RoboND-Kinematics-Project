@@ -55,18 +55,9 @@ def handle_calculate_IK(req):
 	T0_1 = transform_matrix(alpha0, a0, d1, q1).subs(s)
         T1_2 = transform_matrix(alpha1, a1, d2, q2).subs(s)
         T2_3 = transform_matrix(alpha2, a2, d3, q3).subs(s)
-        T3_4 = transform_matrix(alpha3, a3, d4, q4).subs(s)
-        T4_5 = transform_matrix(alpha4, a4, d5, q5).subs(s)
-        T5_6 = transform_matrix(alpha5, a5, d6, q6).subs(s)
-        T6_G = transform_matrix(alpha6, a6, d7, q7).subs(s)
 
-        # Homogeneous Transform Matrix
-        T0_3 = T0_1 * T1_2 * T2_3
-        T0_G = T0_3 * T3_4 * T4_5 * T5_6 * T6_G
         
 	# Extract rotation matrices from the transformation matrices
-        R0_3 = T0_3[0:3,0:3]
-        
         r, p, y = symbols('r, p, y')
         R_x = Matrix([[      1,       0,       0],
                       [      0,  cos(r), -sin(r)],
@@ -79,7 +70,6 @@ def handle_calculate_IK(req):
                       [      0,       0,       1]])
         
         R_corr = R_z.subs(y, radians(180)) * R_y.subs(p, radians(-90))
-        R_G = R_z * R_y * R_x * R_corr
         
         ###
 
@@ -102,7 +92,7 @@ def handle_calculate_IK(req):
      
             ### Your IK code here 
 	    # Compensate for rotation discrepancy between DH parameters and Gazebo
-            R_G = R_G.subs({'r': roll, 'p': pitch, 'y': yaw})
+            R_G = R_z.subs({y: yaw}) * R_y.subs({p: pitch}) * R_x.subs({r: roll}) * R_corr
 
             WC = Matrix([px, py, pz]) - (0.303) * R_G[:,2] # 0.303 = WC to EE in z direction
 	    
@@ -121,8 +111,9 @@ def handle_calculate_IK(req):
             theta2 = pi / 2 - angle_a - atan2(WC[2] - 0.75, sqrt(WC[0]*WC[0] + WC[1]*WC[1]) - 0.35)
             theta3 = pi / 2 - (angle_b + 0.036) # 0.036 accounts for the sag in link 4 of -0.054m
 
-            R0_3 = R0_3.evalf(subs={q1: theta1, q2: theta2, q3: theta3})
-            R3_6 = R0_3.transpose() * R_G # Debugging shows transpose results in a more accurate EE
+            T0_3 = T0_1.subs({q1: theta1}) * T1_2.subs({q2: theta2}) * T2_3.subs({q3: theta3})
+            R0_3 = T0_3[0:3,0:3]
+            R3_6 = R0_3.inv("LU") * R_G
 
             # Euler angles from rotational matrix
             theta4 = atan2(R3_6[2,2], -R3_6[0,2])
