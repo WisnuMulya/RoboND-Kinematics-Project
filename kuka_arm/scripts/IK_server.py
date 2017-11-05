@@ -104,7 +104,7 @@ def handle_calculate_IK(req):
 	    # Compensate for rotation discrepancy between DH parameters and Gazebo
             R_G = R_G.subs({'r': roll, 'p': pitch, 'y': yaw})
 
-            WC = Matrix([px, py, pz]) - (0.303) * R_rpy[:,2] # 0.303 = WC to EE in z direction
+            WC = Matrix([px, py, pz]) - (0.303) * R_G[:,2] # 0.303 = WC to EE in z direction
 	    
 	    # Calculate joint angles using Geometric IK method
 	    theta1 = atan2(WC[1], WC[0])
@@ -122,7 +122,7 @@ def handle_calculate_IK(req):
             theta3 = pi / 2 - (angle_b + 0.036) # 0.036 accounts for the sag in link 4 of -0.054m
 
             R0_3 = R0_3.evalf(subs={q1: theta1, q2: theta2, q3: theta3})
-            R3_6 = R0_3.transpose * R_G # Debugging shows transpose results in a more accurate EE
+            R3_6 = R0_3.transpose() * R_G # Debugging shows transpose results in a more accurate EE
 
             # Euler angles from rotational matrix
             theta4 = atan2(R3_6[2,2], -R3_6[0,2])
@@ -131,6 +131,7 @@ def handle_calculate_IK(req):
             
             ###
 		
+
             # Populate response for the IK request
             # In the next line replace theta1,theta2...,theta6 by your joint angle variables
 	    joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
